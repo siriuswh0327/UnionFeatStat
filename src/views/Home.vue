@@ -27,7 +27,7 @@ export default {
   name: 'Home',
   data() {
     return {
-      dateTimeToday: 0,
+      dateTimeToday: 0, //今日时间戳
       baseQualifiedLine: 450,//基准合格线
       activeWualifiedLine: 800,//基准优秀线
       baseFinishedTask: 150,//周任务次数合格线
@@ -61,6 +61,11 @@ export default {
         console.log(this.result);
         try{
           const result = JSON.parse(this.result);
+          const compairFeats = function(key) {
+            return function(m1, m2) {
+              return (m2[key] - m1[key]);
+            }
+          }
           console.log(result.data.members);
           let unionMemberData = result.data.members.map((item) => {
             //获取基本参数姓名、加入时间、周任务次数、周功勋
@@ -80,8 +85,7 @@ export default {
               memberQualifiedLine: memberQualifiedLine,
               tag: tag
             }
-          });
-
+          }).sort(compairFeats("weeklyFeats"));
           console.log(unionMemberData);
 
           that.tableData = unionMemberData;
