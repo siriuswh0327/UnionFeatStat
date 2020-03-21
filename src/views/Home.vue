@@ -7,8 +7,7 @@
           :data="tableData"
           style="width: 100%"
           :row-class-name="tableRowClassName"
-          :default-sort = "{prop: 'weeklyFeats', order: 'descending'}"
-        >
+          :default-sort = "{prop: 'weeklyFeats', order: 'descending'}">
           <el-table-column
             prop="name"
             label="游戏名"
@@ -43,7 +42,6 @@
           >
           </el-table-column>
         </el-table>
-
       </div>
       <div class="stat-chart-wrapper">
         <el-upload
@@ -57,6 +55,58 @@
           <i class="el-icon-upload"></i>
           <div class="el-upload__text">将json文件拖到此处，或<em>点击上传</em></div>
         </el-upload>
+
+        <div class="btn-export-wrapper">
+          <el-button type="primary" @click="showLotterryCondition">导出抽奖名单</el-button>
+
+          <el-dialog
+            title="抽奖标准设置"
+            :visible.sync="lotterryConditionDialogVisible"
+            class="lottery-setting-dialog"
+            width="320px">
+            <el-row :gutter="20"> 
+              <el-col :span="10" :offset="2">
+                <span class="lottery-condition-label">周功勋：</span>
+              </el-col>
+              <el-col :span="10">
+                <el-input 
+                  v-model="lotteryWeeklyFeat" 
+                  size="small">
+                </el-input>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20"> 
+              <el-col :span="10" :offset="2">
+                <span class="lottery-condition-label">周任务次数：</span>
+              </el-col>
+              <el-col :span="10">
+                <el-input 
+                  v-model="lotteryWeeklyFinishedTask" 
+                  size="small">
+                </el-input>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20"> 
+              <el-col :span="10" :offset="2">
+                <span class="lottery-condition-label">累积功勋：</span>
+              </el-col>
+              <el-col :span="10">
+                <el-input 
+                  v-model="lotteryTotalFeat" 
+                  size="small">
+                </el-input>
+              </el-col>
+            </el-row>
+            <el-row type="flex" justify="center" style="margin-top:15px;">
+              <el-button 
+                type="primary"
+                @click="exportMembers">
+                导出名单
+              </el-button>
+            </el-row>
+          </el-dialog>
+
+        </div>
       </div>
     </main>
   </div>
@@ -64,6 +114,7 @@
 
 <script>
 // @ is an alias to /src
+import FileSaver from 'file-saver'
 
 export default {
   name: 'Home',
@@ -71,9 +122,13 @@ export default {
     return {
       dateTimeToday: 0,
       baseQualifiedLine: 450,//基准合格线
-      activeWualifiedLine: 800,//基准优秀线
+      activeQualifiedLine: 800,//基准优秀线
       baseFinishedTask: 150,//周任务次数合格线
-      tableData: []
+      tableData: [],
+      lotterryConditionDialogVisible: false, //抽奖界面条件筛选
+      lotteryWeeklyFeat: 800, //抽奖周功勋标准
+      lotteryWeeklyFinishedTask: 210, //抽奖周任务次数标准
+      lotteryTotalFeat: 0 //抽奖累计功勋标准
     }
   },
   created() {
@@ -87,11 +142,11 @@ export default {
     let unWeekend = today.getDay() < 7;
     this.dateTimeToday = today.getTime();
     this.baseQualifiedLine = unWeekend ? BASE_LINE_FRI : BASE_LINE_WEEK;
-    this.activeWualifiedLine = unWeekend ? ACTIVE_LINE_FRI : ACTIVE_LINE_WEEK;
+    this.activeQualifiedLine = unWeekend ? ACTIVE_LINE_FRI : ACTIVE_LINE_WEEK;
     this.baseFinishedTask = unWeekend ? BASE_FINISHED_TASK_FRI : BASE_FINISHED_TASK_WEEK;
 
     console.log(this.baseQualifiedLine);
-    console.log(this.activeWualifiedLine);
+    console.log(this.activeQualifiedLine);
     console.log(this.baseFinishedTask);
   },
   methods: {
@@ -152,7 +207,7 @@ export default {
       * 寮友标记说明：
       * danger: 高危待清理区（周任务次数＜基准任务数baseFinishedTask && 周功勋<基准合格线baseQualifiedLine）
       * warning: 黄色警告区 （周任务次数<基准任务数baseFinishedTask && 周功勋>=基准合格线baseQualifiedLine） 
-      * active: 活跃寮友 （周任务次数=== 基准任务数baseFinishedTask+60 && 周功勋>=基准优秀线activeWualifiedLine）
+      * active: 活跃寮友 （周任务次数=== 基准任务数baseFinishedTask+60 && 周功勋>=基准优秀线activeQualifiedLine）
       * normal: 合格寮友
       * new： 新进
       */
@@ -161,7 +216,7 @@ export default {
         memberTag = isNew ? "new" : "danger";
       }else if(taskFinishedWeek < this.baseFinishedTask && weeklyFeats >= qualifiedLine){
         memberTag = isNew ? "new" : "warning";
-      }else if(taskFinishedWeek === (this.baseFinishedTask + 60) &&  weeklyFeats >= this.activeWualifiedLine){
+      }else if(taskFinishedWeek === (this.baseFinishedTask + 60) &&  weeklyFeats >= this.activeQualifiedLine){
         memberTag = "active";
       }else{
         memberTag = "normal";
@@ -173,6 +228,63 @@ export default {
       //根据标签附上对应的行样式
       let rowClass = row.tag === "normal" ? "" : row.tag + "-member";
       return rowClass;
+    },
+    //导出json文件
+    exportJSON(data) {
+      try {
+        const dataStr = JSON.stringify(data);
+        const blob = new Blob([dataStr],{type:''});
+        const todayStr = this.createDateStr();
+        const fileName = "LotteryMembersOfDM" + todayStr + ".json";
+        FileSaver.saveAs(blob,fileName);
+      } catch (err) {
+        console.error(err);
+      }
+    },
+    //显示抽奖门槛设置
+    showLotterryCondition() {
+      if(this.tableData.length > 0){
+        this.lotterryConditionDialogVisible = true;
+      }else{
+        this.$alert('统计表为空，请先上传json数据', '提示', {
+          confirmButtonText: '确定',
+        });
+      }
+    },
+    //导出名单
+    exportMembers() {
+      console.log("导出名单")
+      const LotteryWeeklyFeat = this.lotteryWeeklyFeat;
+      const LotteryWeeklyFinishedTask = this.lotteryWeeklyFinishedTask;
+      const LotteryTotalFeat = this.lotteryTotalFeat;
+      
+      if(this.tableData.length > 0) {
+        let exportTableData = this.tableData.filter(
+            member => (member.weeklyFeats >= LotteryWeeklyFeat 
+                    && member.taskFinishedWeek >=LotteryWeeklyFinishedTask
+                    && member.totalFeats >= LotteryTotalFeat)
+        ).map(member => {
+          return {
+            name: member.name,
+            editable: false
+          }
+        })
+        console.log(exportTableData);
+        this.$nextTick(() => {
+          this.exportJSON(exportTableData);
+        })
+
+      }
+    },
+    createDateStr() {
+      const date = new Date();
+      let year = date.getFullYear().toString();
+      let month = (date.getMonth() + 1).toString().padStart(2,'0');
+      let day = date.getDay().toString().padStart(2,'0');
+      let hour = date.getHours().toString().padStart(2,'0');
+      let minute = date.getMinutes().toString().padStart(2,'0');
+
+      return (year + month + day + hour + minute);
     }
   }
 }
@@ -227,8 +339,33 @@ export default {
           width: 100%;
           margin: 0 auto;
         }
+        .btn-export-wrapper {
+          margin-top: 20px;
+          display: flex;
+          justify-content: flex-end;
+
+
+          
+        }
       }
     }
   }
 
+  .el-row {
+    margin-bottom: 10px;
+
+    .lottery-condition-label { 
+      display: block;
+      width: 100%;
+      height: 32px;
+      line-height: 32px;
+      text-align: right;
+    }
+  }
+
+  .lottery-setting-dialog {
+    .el-dialog__body {
+      padding: 20px 20px 5px;
+    }
+  }
 </style>
