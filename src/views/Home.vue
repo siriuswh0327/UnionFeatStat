@@ -139,7 +139,7 @@ export default {
     const ACTIVE_LINE_WEEK = 800; //周日功勋活跃线
     const BASE_FINISHED_TASK_FRI = 90; //周五任务次数基准线
     const BASE_FINISHED_TASK_WEEK = 150; //周日任务次数基准线
-    let unWeekend = today.getDay() < 7;
+    let unWeekend = today.getDay() != 0;//判断本日是不是周日
     this.dateTimeToday = today.getTime();
     this.baseQualifiedLine = unWeekend ? BASE_LINE_FRI : BASE_LINE_WEEK;
     this.activeQualifiedLine = unWeekend ? ACTIVE_LINE_FRI : ACTIVE_LINE_WEEK;
@@ -216,7 +216,7 @@ export default {
         memberTag = isNew ? "new" : "danger";
       }else if(taskFinishedWeek < this.baseFinishedTask && weeklyFeats >= qualifiedLine){
         memberTag = isNew ? "new" : "warning";
-      }else if(taskFinishedWeek === (this.baseFinishedTask + 60) &&  weeklyFeats >= this.activeQualifiedLine){
+      }else if(taskFinishedWeek >= (this.baseFinishedTask + 60) &&  weeklyFeats >= this.activeQualifiedLine){
         memberTag = "active";
       }else{
         memberTag = "normal";
@@ -316,8 +316,10 @@ export default {
         overflow: auto;
 
         .el-table {
+          color: #777;
+
           .danger-member {
-            background: #F44336;
+            background: #FF8a80;
           }
           .warning-member {
             background: #FFE57F;
