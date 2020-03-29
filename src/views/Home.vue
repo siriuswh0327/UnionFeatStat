@@ -133,17 +133,19 @@ export default {
   },
   created() {
     const today = new Date();
-    const BASE_LINE_FRI = 300; // 周五功勋基准线
-    const ACTIVE_LINE_FRI = 535; // 周五功勋活跃线
+    const WeekDay = today.getDay();//星期几
+    console.log(WeekDay);
+    const BASE_LINE_SINGLE = 60 * WeekDay; // 非周日功勋基准线
+    const ACTIVE_LINE_SINGLE = 100 * WeekDay; // 非周日功勋活跃线
     const BASE_LINE_WEEK = 450; //周日功勋基准线
     const ACTIVE_LINE_WEEK = 800; //周日功勋活跃线
-    const BASE_FINISHED_TASK_FRI = 90; //周五任务次数基准线
-    const BASE_FINISHED_TASK_WEEK = 150; //周日任务次数基准线
-    let unWeekend = today.getDay() != 0;//判断本日是不是周日
+    const BASE_FINISHED_TASK_SINGLE = 30 * WeekDay; //周五任务次数基准线
+    const BASE_FINISHED_TASK_WEEK = 210; //周日任务次数基准线
+    let unWeekend = WeekDay != 0;//判断本日是不是周日
     this.dateTimeToday = today.getTime();
-    this.baseQualifiedLine = unWeekend ? BASE_LINE_FRI : BASE_LINE_WEEK;
-    this.activeQualifiedLine = unWeekend ? ACTIVE_LINE_FRI : ACTIVE_LINE_WEEK;
-    this.baseFinishedTask = unWeekend ? BASE_FINISHED_TASK_FRI : BASE_FINISHED_TASK_WEEK;
+    this.baseQualifiedLine = unWeekend ? BASE_LINE_SINGLE : BASE_LINE_WEEK;
+    this.activeQualifiedLine = unWeekend ? ACTIVE_LINE_SINGLE : ACTIVE_LINE_WEEK;
+    this.baseFinishedTask = unWeekend ? BASE_FINISHED_TASK_SINGLE : BASE_FINISHED_TASK_WEEK;
 
     console.log(this.baseQualifiedLine);
     console.log(this.activeQualifiedLine);
@@ -216,7 +218,7 @@ export default {
         memberTag = isNew ? "new" : "danger";
       }else if(taskFinishedWeek < this.baseFinishedTask && weeklyFeats >= qualifiedLine){
         memberTag = isNew ? "new" : "warning";
-      }else if(taskFinishedWeek >= (this.baseFinishedTask + 60) &&  weeklyFeats >= this.activeQualifiedLine){
+      }else if(taskFinishedWeek >= this.baseFinishedTask &&  weeklyFeats >= this.activeQualifiedLine){
         memberTag = "active";
       }else{
         memberTag = "normal";
