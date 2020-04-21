@@ -181,7 +181,7 @@ export default {
               memberQualifiedLine: memberQualifiedLine,// 合格线
               tag: tag // 标记
             }
-          }).sort(compairFeats("weeklyFeats"));
+          });
           console.log(unionMemberData);
 
           that.tableData = unionMemberData;
